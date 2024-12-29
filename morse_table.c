@@ -94,14 +94,14 @@ char morse_code_check(char* str) {
  * if you want to test this function, please uncomment the main function below
  */
 
-char str[20];
-char c = 'X';
+// char str[20];
+// char c = 'X';
 
-int main() {
-    while (1) {
-        scanf("%s", str);
-        c = morse_code_check(str);
-        printf("%c\n", c);
-    }
-    return 0;
-}
+// int main() {
+//     while (1) {
+//         scanf("%s", str);
+//         c = morse_code_check(str);
+//         printf("%c\n", c);
+//     }
+//     return 0;
+// }
