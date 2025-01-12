@@ -207,7 +207,7 @@ void UART_Init(void){
 
     // PIE1bits.TXIE = 0;       
     // IPR1bits.TXIP = 0;    
-//    PIE1bits.RCIE = 1;          
+    // PIE1bits.RCIE = 1;          
     IPR1bits.RCIP = 0;  // low priority
 }
 void ADC_init(void){
@@ -219,7 +219,7 @@ void ADC_init(void){
     ADCON2bits.ADFM = 0;    //left justified 
     
     PIR1bits.ADIF = 0;
-    IPR1bits.ADIP = 1;   // high priority
+    IPR1bits.ADIP = 1;      // high priority
     PIE1bits.ADIE = 1;
 }
 void PORT_init(void){
@@ -239,7 +239,7 @@ void Timer_Initialize(){
     T0CONbits.T08BIT = 0;       // 16-bit timer
     T0CONbits.T0CS = 0;         // set internal clock
     T0CONbits.PSA = 0;          // use Prescale value
-    T0CONbits.T0PS = 0b001;    // 1:4 Prescale value
+    T0CONbits.T0PS = 0b001;     // 1:4 Prescale value
     T0CONbits.TMR0ON = 0;
 }
 
@@ -268,25 +268,26 @@ void __interrupt(high_priority)H_ISR(){
         // This statement should just follow the ADIF block
         return;
     }
-    if (INTCONbits.INT0IF) {    //timer interrupt
+    // ============ button interrupt =============
+    if (INTCONbits.INT0IF) {                // button interrupt, check dot or dash
         INTCONbits.TMR0IF = 0;
         T0CONbits.TMR0ON = 0;           
         morse_signal = '0';
         LATAbits.LA4 = 0;
-        if(value <= 128){               // intput
-            TMR0H = 0xE7;               // Fosc = 125kHz, Tosc = 32us, delay time = 0.8s
-            TMR0L = 0x96;               // cycle = 6250, (count + 1) = cycle / prescale value
+        if(value <= 128){                   // intput
+            TMR0H = 0xE7;                   // Fosc = 125kHz, Tosc = 32us, delay time = 0.8s
+            TMR0L = 0x96;                   // cycle = 6250, (count + 1) = cycle / prescale value
             T0CONbits.TMR0ON = 1;
-            while(!INTCONbits.TMR0IF);  // waiting timer 0 intrrupt
+            while(!INTCONbits.TMR0IF);      // waiting timer 0 interrupt, long press border
             T0CONbits.TMR0ON = 0;
             INTCONbits.TMR0IF = 0;
-            if(!PORTBbits.RB0){
+            if(!PORTBbits.RB0){             // while timer interrupt and button be pushed, dash
                 morse_signal = '1';
                 LATAbits.LA4 = 1;
                 TMR0H = 0xF9;               // Fosc = 125kHz, Tosc = 32us, delay time = 0.4s
                 TMR0L = 0xE5;               // cycle = 3125, (count + 1) = cycle / prescale value
                 T0CONbits.TMR0ON = 1;
-                while(!INTCONbits.TMR0IF);  // waiting timer 0 intrrupt
+                while(!INTCONbits.TMR0IF);  // waiting timer 0 intrrupt, Flashing time
                 T0CONbits.TMR0ON = 0;
                 INTCONbits.TMR0IF = 0;
                 LATAbits.LA4 = 0;
@@ -296,7 +297,7 @@ void __interrupt(high_priority)H_ISR(){
             lenStr++;
         }
         while(!PORTBbits.RB0);
-        INTCONbits.INT0IF = 0;          // clear INT0 interrupt flag
+        INTCONbits.INT0IF = 0;              // clear INT0 interrupt flag
     }
     return;
 }
@@ -308,7 +309,6 @@ void main(void){
     PORT_init();
     UART_Init();
     Interrupt_Enable();
-    
     LED_Initialize();
     Timer_Initialize();
     ADCON0bits.GO = 1;
